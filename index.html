@@ -68,9 +68,14 @@
       transition: transform 0.15s ease, background 0.3s ease;
     }
 
-    button:hover {
+    button:hover:not(:disabled) {
       background: #729ecb;
       transform: scale(1.04);
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
     }
 
     #output {
@@ -107,7 +112,7 @@
   <h1>Transliterasi Pegon</h1>
 
   <textarea id="inputText" placeholder="Masukkan teks bahasa Indonesia di sini..."></textarea>
-  <button id="btnConvert">Ubah ke Pegon</button>
+  <button id="btnConvert" disabled>Ubah ke Pegon</button>
 
   <div id="output">Memuat kamus Pegon…</div>
 
@@ -121,22 +126,32 @@
       '!': '!'
     };
 
-    // ✅ URL GitHub Pages kamu
+    // ✅ URL JSON GitHub Pages milikmu
     const URL_KAMUS = 'https://arsyad36.github.io/pegon/pegon.json';
 
     let kamusPegon = {};
+    const btn = document.getElementById('btnConvert');
+    const output = document.getElementById('output');
 
     async function loadKamus() {
       try {
         const res = await fetch(URL_KAMUS, { cache: 'force-cache' });
-        if (!res.ok) throw new Error('HTTP ' + res.status);
-        kamusPegon = await res.json();
-        document.getElementById('output').textContent =
-          'Kamus Pegon siap digunakan.';
-        console.log('Kamus dimuat:', Object.keys(kamusPegon).length, 'entri');
+        const data = await res.json();
+
+        // 🔥 KONVERSI ARRAY JSON → OBJEK KAMUS
+        kamusPegon = {};
+        data.forEach(item => {
+          const latin = item["Kata Latin"]
+            .toLowerCase()
+            .trim();
+          kamusPegon[latin] = item["Aksara Pegon"];
+        });
+
+        output.textContent =
+          `Kamus siap (${Object.keys(kamusPegon).length} kata)`;
+        btn.disabled = false;
       } catch (e) {
-        document.getElementById('output').textContent =
-          'Gagal memuat kamus Pegon.';
+        output.textContent = 'Gagal memuat kamus Pegon';
         console.error(e);
       }
     }
@@ -157,10 +172,10 @@
       return hasil.trim();
     }
 
-    document.getElementById('btnConvert').addEventListener('click', () => {
+    btn.addEventListener('click', () => {
       const teks = document.getElementById('inputText').value;
       if (!teks.trim()) return;
-      document.getElementById('output').textContent = transliterasi(teks);
+      output.textContent = transliterasi(teks);
     });
 
     loadKamus();
