@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Transliterasi Pegon Minimalis</title>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      user-select: none;
+    }
+
+    body {
+      background: #f9f9f9;
+      color: #333;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1rem;
+    }
+
+    h1 {
+      font-weight: 600;
+      font-size: 2.2rem;
+      letter-spacing: 0.08em;
+      margin-bottom: 1.2rem;
+      color: #555;
+      text-transform: uppercase;
+    }
+
+    textarea {
+      width: 90vw;
+      max-width: 700px;
+      height: 160px;
+      border-radius: 10px;
+      border: 1.5px solid #ccc;
+      padding: 1rem 1.2rem;
+      font-size: 1.1rem;
+      background: #fff;
+      color: #222;
+      resize: vertical;
+      transition: border-color 0.3s ease;
+      direction: ltr;
+    }
+
+    textarea:focus {
+      outline: none;
+      border-color: #a3c4f3;
+      box-shadow: 0 0 8px #a3c4f3aa;
+    }
+
+    button {
+      margin-top: 1.2rem;
+      padding: 0.9rem 2.8rem;
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: #fff;
+      background: #8ab6d6;
+      border: none;
+      border-radius: 30px;
+      cursor: pointer;
+      box-shadow: 0 4px 10px #8ab6d6aa;
+      transition: transform 0.15s ease, background 0.3s ease;
+    }
+
+    button:hover {
+      background: #729ecb;
+      transform: scale(1.04);
+    }
+
+    #output {
+      margin-top: 2rem;
+      width: 90vw;
+      max-width: 700px;
+      min-height: 140px;
+      padding: 1rem 1.4rem;
+      border-radius: 14px;
+      background: #ffffffdd;
+      color: #444;
+      font-size: 1.9rem;
+      line-height: 1.4;
+      box-shadow: inset 0 0 8px #b0c4db99;
+      direction: rtl;
+      white-space: pre-wrap;
+      user-select: text;
+      font-family: 'Georgia', serif;
+      letter-spacing: 0.08em;
+    }
+
+    footer {
+      margin-top: auto;
+      color: #999;
+      font-size: 0.9rem;
+      font-style: italic;
+      padding-top: 1rem;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h1>Transliterasi Pegon</h1>
+
+  <textarea id="inputText" placeholder="Masukkan teks bahasa Indonesia di sini..."></textarea>
+  <button id="btnConvert">Ubah ke Pegon</button>
+
+  <div id="output">Memuat kamus Pegon…</div>
+
+  <footer>© 2025 • Pegon Translator Minimalis</footer>
+
+  <script>
+    const tandaBaca = {
+      '.': '۔',
+      ',': '،',
+      '?': '؟',
+      '!': '!'
+    };
+
+    // ✅ URL GitHub Pages kamu
+    const URL_KAMUS = 'https://arsyad36.github.io/pegon/pegon.json';
+
+    let kamusPegon = {};
+
+    async function loadKamus() {
+      try {
+        const res = await fetch(URL_KAMUS, { cache: 'force-cache' });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        kamusPegon = await res.json();
+        document.getElementById('output').textContent =
+          'Kamus Pegon siap digunakan.';
+        console.log('Kamus dimuat:', Object.keys(kamusPegon).length, 'entri');
+      } catch (e) {
+        document.getElementById('output').textContent =
+          'Gagal memuat kamus Pegon.';
+        console.error(e);
+      }
+    }
+
+    function transliterasi(teks) {
+      const tokens = teks.match(/[a-zA-ZÀ-ÿ'-]+|[.,?!]/g) || [];
+      let hasil = '';
+
+      tokens.forEach(token => {
+        if (tandaBaca[token]) {
+          hasil += tandaBaca[token] + ' ';
+        } else {
+          const kata = token.toLowerCase();
+          hasil += (kamusPegon[kata] || token) + ' ';
+        }
+      });
+
+      return hasil.trim();
+    }
+
+    document.getElementById('btnConvert').addEventListener('click', () => {
+      const teks = document.getElementById('inputText').value;
+      if (!teks.trim()) return;
+      document.getElementById('output').textContent = transliterasi(teks);
+    });
+
+    loadKamus();
+  </script>
+
+</body>
+</html>
